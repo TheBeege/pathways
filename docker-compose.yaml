@@ -1,0 +1,15 @@
+services:
+  graphdb:
+    image: dgraph/standalone
+    ports:
+    - name: HTTP
+      published: 8080
+      target: 8080 
+    - name: gRPC
+      published: 9080
+      target: 9080
+
+  pathways_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
