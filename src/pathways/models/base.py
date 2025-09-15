@@ -6,4 +6,5 @@ def initialize_schema(client: pydgraph.DgraphClient):
     interaction: [uid] @reverse .
     pathway: [uid] @reverse .
     """
-    return client.alter(pydgraph.Operation(schema=schema))
+    operation = pydgraph.Operation(schema=schema, run_in_background=True)
+    return client.alter(operation)

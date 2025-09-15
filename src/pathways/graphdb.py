@@ -1,3 +1,4 @@
+import json
 import logging
 import pydgraph
 
@@ -16,6 +17,8 @@ def init_models(client: pydgraph.DgraphClient):
     protein.initialize_schema(client)
 
 def seed_junk_data(client: pydgraph.DgraphClient):
+    logger = logging.getLogger("pathways")
+    logger.info("starting seed junk data...")
     transaction = client.txn()
     try:
         insert_data = {
@@ -69,14 +72,47 @@ def seed_junk_data(client: pydgraph.DgraphClient):
         }
         response = transaction.mutate(set_obj=insert_data)
         # wtf is this? it's unused in example
-        print(response)
+        logger.debug(response)
         commit_response = transaction.commit()
-        print(commit_response)
-        print(
+        logger.debug(commit_response)
+        logger.info(
             'Created pathway named "Glycolysis" with uid = {}'.format(response.uids["glycolysis"])
         )
     except Exception as e:
-        logging.exception("dafuq")
+        logger.exception("dafuq")
     finally:
         # Clean up. Calling this after txn.commit() is a no-op and hence safe.
         transaction.discard()
+
+
+def is_seeded(client: pydgraph.DgraphClient) -> bool:
+    logger = logging.getLogger("pathways")
+    transaction = client.txn()
+    ## Check if data exists already
+    query = """
+query get_pathway_io_molecules ($pathway : string = "Glycolysis")
+{
+interactionList(func: type(Pathway)) @filter(eq(name, $pathway)) {
+    uid
+    name
+    interaction {
+    name
+    input {
+        uid
+        name
+    }
+    output {
+        uid
+        name
+    }
+    }
+}
+}
+"""
+    result = transaction.query(query)
+    
+    data = json.loads(result.json)
+    logger.debug("data: %r", json.dumps(data))
+    has_seed_data = len(data.get("interactionList", [])) != 0
+    transaction.discard()
+    return has_seed_data

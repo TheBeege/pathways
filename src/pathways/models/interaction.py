@@ -20,4 +20,5 @@ def initialize_schema(client: pydgraph.DgraphClient):
         next_interaction
     }
     """
-    return client.alter(pydgraph.Operation(schema=schema))
+    operation = pydgraph.Operation(schema=schema, run_in_background=True)
+    return client.alter(operation)
