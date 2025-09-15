@@ -8,8 +8,22 @@ services:
     - name: gRPC
       published: 9080
       target: 9080
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 2s
+      timeout: 60s
+      retries: 20
 
   pathways_api:
     build:
       context: .
       dockerfile: Dockerfile
+    depends_on:
+      graphdb:
+        condition: service_healthy
+    ports:
+    - name: HTTP
+      published: 8000
+      target: 8000
+    environment:
+      - db_host=graphdb

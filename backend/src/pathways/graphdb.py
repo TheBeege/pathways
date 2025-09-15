@@ -1,11 +1,13 @@
 import json
 import logging
+from pathways.config import Settings
 import pydgraph
 
 from pathways.models import base, category, interaction, molecule, pathway, protein
 
-def get_graphdb_client():
-    client = pydgraph.open('dgraph://graphdb:9080')  # TODO: use config env
+def get_graphdb_client() -> pydgraph.DgraphClient:
+    settings = Settings()
+    client = pydgraph.open(f'dgraph://{settings.db_host}:{settings.db_port}')
     return client
 
 def init_models(client: pydgraph.DgraphClient):
