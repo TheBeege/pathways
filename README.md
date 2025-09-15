@@ -1,39 +1,7 @@
 # Pathways
 
-Writing in Python cuz I want to actually finish a project for once.
+Eventually will show biological pathways in a manner that doesn't suck. Will provide a programmatic interface, human interface, filtering, aggregating, gap analysis, la dee da.
 
-Rewrite it in Rust or some shit. I don't care. Just make sure it works. Then force me to finally learn Rust.
+## Structure
 
-Very much still WiP. Will throw out a release tag when it's worth looking at.
-
-## Setup
-
-```shell
-uv sync
-docker compose up -d
-```
- 
-Visit https://ratel.hypermode.com in the browser. Enter `http://localhost:8080` as the server.
-
-Run the below query:
-
-```
-query get_pathway_io_molecules ($pathway : string = "Glycolysis")
-{
-  interactionList(func: type(Pathway)) @filter(eq(name, $pathway)) {
-    uid
-    name
-    interaction {
-      name
-      input {
-        uid
-        name
-      }
-      output {
-        uid
-        name
-      }
-    }
-  }
-}
-```
+There's a frontend folder. There's a backend folder. Each has its own readme. The frontend one is just a template for now because I have no idea. Centering a div? Man, I didn't take differential equations. Delivering oodles of data that are logged, secured, and self-documenting in less than 100ms? I wanted to get my hands dirty, not just lift a finger. Read the readmes. Ignore my terrible jokes. Help me on this project if you actually read it.
