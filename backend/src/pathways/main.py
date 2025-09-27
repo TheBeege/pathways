@@ -1,30 +1,13 @@
-import json
 import logging
 from pathways.graphdb import get_graphdb_client, init_models, is_seeded, seed_junk_data
 from pathways.routes.pathway import router as pathway_router
 from pathways.routes.protein import router as protein_router
+from pathways.util import setup_logger
 import uvicorn
 from fastapi import FastAPI
 
 
 app = FastAPI()
-
-def setup_logger():
-    logger = logging.getLogger("pathways")
-    logger.setLevel(logging.DEBUG)
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter(json.dumps({
-        "time": "%(asctime)s",
-        "timestamp": "%(created)f",
-        "levelName": "%(levelname)s",
-        "functionName": "%(funcName)s",
-        "lineNumber": "%(lineno)s",
-        "module": "%(module)s",
-        "message": "%(message)s",
-    }))
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-
 
 def init():
     setup_logger()
