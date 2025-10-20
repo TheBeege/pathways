@@ -1,35 +1,36 @@
-import logging
-from pathways.graphdb import get_graphdb_client, init_models, is_seeded, seed_junk_data
-from pathways.routes.pathway import router as pathway_router
-from pathways.routes.protein import router as protein_router
-from pathways.util import setup_logger
+from pathways.settings import Settings
 import uvicorn
 from fastapi import FastAPI
 
+from pathways.graphdb import prepare_seed_database
+from pathways.routes.interaction import router as interaction_router
+from pathways.routes.pathway import router as pathway_router
+from pathways.routes.protein import router as protein_router
+from pathways.utils.logging import configure_logging
 
+settings = Settings()
 app = FastAPI()
 
-def init():
-    setup_logger()
-    logger = logging.getLogger("pathways")
-    logger.info("Hello from pathways!")
-    client = get_graphdb_client()
-    logger.debug("got graphdb client")
-    if not is_seeded(client):
-        logger.info("Data already exists. Not seeding junk data.")
-        init_models(client)
-        logger.debug("init models done")
-        seed_junk_data(client)
-        logger.debug("seeding junk data done")
 
+def init():
+    configure_logging(settings.log_level)
+
+    if settings.seed_data:
+        prepare_seed_database()
+
+    app.include_router(interaction_router, prefix="/interactions")
     app.include_router(pathway_router)
     app.include_router(protein_router)
 
 
 def main():
     init()
-    uvicorn.run("pathways.main:app", host="0.0.0.0", port=8000)
-
+    uvicorn.run(
+        "pathways.main:app",
+        host=settings.host_address,
+        port=settings.port,
+        log_level=settings.log_level.lower(),
+    )
 
 if __name__ == "__main__":
     main()

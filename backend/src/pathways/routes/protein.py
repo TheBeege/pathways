@@ -1,6 +1,6 @@
-from typing import List, Optional
+from typing import Optional
 from fastapi import APIRouter, Depends, Query
-from pathways.schemas.protein import ProteinDetail, ProteinListItem
+from pathways.schemas.protein import ProteinDetail, ProteinListResponse
 from pathways.services.protein import ProteinService
 
 router = APIRouter(
@@ -9,21 +9,16 @@ router = APIRouter(
 )
 
 @router.get("/")
-async def get_proteins(
-    name: Optional[str] = Query(),
+def get_proteins(
+    name: Optional[str] = None,
     protein_service: ProteinService = Depends(ProteinService),
-) -> List[ProteinListItem]:
-    return await protein_service.get_protein_list(name)
-    # return [ProteinListItem(
-    #     id="0xa",
-    #     name="bogus",
-    #     interaction=["blarg"],
-    # )]
+) -> ProteinListResponse:
+    return protein_service.list(name)
+
 
 @router.get("/{id}")
-async def get_protein_detail(id: str) -> ProteinDetail:
-    return ProteinDetail(
-        id=id,
-        name="bogus",
-        interaction=["blarg"],
-    )
+def get_protein_detail(
+    id: str,
+    protein_service: ProteinService = Depends(ProteinService),
+) -> ProteinDetail:
+    return protein_service.get(id)

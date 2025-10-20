@@ -1,5 +1,6 @@
 import pydgraph
 
+
 def initialize_schema(client: pydgraph.DgraphClient):
     schema = """
     name: string @unique @index(exact) .

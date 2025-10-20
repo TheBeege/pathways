@@ -1,4 +1,22 @@
+from typing import TYPE_CHECKING, List, Optional
 import pydgraph
+
+from pydantic import BaseModel
+
+if TYPE_CHECKING:
+    from pathways.models.molecule import Molecule
+    from pathways.models.protein import Protein
+
+
+class Interaction(BaseModel):
+    name: str
+    actor: List["Protein"]
+    catalyst: List["Molecule"]
+    input: List["Molecule"]
+    output: List["Molecule"]
+    previous_interaction: Optional["Interaction"] = None
+    next_interaction: Optional["Interaction"] = None
+
 
 def initialize_schema(client: pydgraph.DgraphClient):
     schema = """

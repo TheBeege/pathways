@@ -10,20 +10,19 @@ services:
       target: 9080
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/"]
-      interval: 2s
-      timeout: 60s
-      retries: 20
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   pathways_api:
     build:
       context: .
       dockerfile: Dockerfile
+    ports:
+    - name: HTTP
+      published: 5000
+      target: 5000
     depends_on:
       graphdb:
         condition: service_healthy
-    ports:
-    - name: HTTP
-      published: 8000
-      target: 8000
-    environment:
-      - db_host=graphdb

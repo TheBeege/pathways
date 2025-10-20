@@ -1,14 +1,26 @@
 import json
 import logging
+from pathways.utils.logging import get_logger
 from pathways.config import Settings
 import pydgraph
 
 from pathways.models import base, category, interaction, molecule, pathway, protein
+from pathways.settings import Settings
+
+
+def prepare_seed_database():
+    logger = get_logger()
+    client = get_graphdb_client()
+    init_models(client)
+    seed_junk_data(client, logger)
+
 
 def get_graphdb_client() -> pydgraph.DgraphClient:
     settings = Settings()
-    client = pydgraph.open(f'dgraph://{settings.db_host}:{settings.db_port}')
+    connection_string = settings.get_graphdb_url()
+    client = pydgraph.open(connection_string)
     return client
+
 
 def init_models(client: pydgraph.DgraphClient):
     base.initialize_schema(client)
@@ -18,9 +30,29 @@ def init_models(client: pydgraph.DgraphClient):
     pathway.initialize_schema(client)
     protein.initialize_schema(client)
 
-def seed_junk_data(client: pydgraph.DgraphClient):
-    logger = logging.getLogger("pathways")
-    logger.info("starting seed junk data...")
+
+def seed_junk_data(client: pydgraph.DgraphClient, logger: logging.Logger):
+    """
+    Query to test output: 
+        query get_interactions_for_pathway ($pathway : string = "Glycolysis")
+        {
+        interactionList(func: type(Pathway)) @filter(eq(name, $pathway)) {
+            uid
+            name
+            interaction {
+                    name
+                    input {
+                        uid
+                        name
+                    }
+                    output {
+                        uid
+                        name
+                    }
+                }
+            }
+        }
+    """
     transaction = client.txn()
     try:
         insert_data = {
@@ -80,41 +112,8 @@ def seed_junk_data(client: pydgraph.DgraphClient):
         logger.info(
             'Created pathway named "Glycolysis" with uid = {}'.format(response.uids["glycolysis"])
         )
-    except Exception as e:
+    except Exception:
         logger.exception("dafuq")
     finally:
         # Clean up. Calling this after txn.commit() is a no-op and hence safe.
         transaction.discard()
-
-
-def is_seeded(client: pydgraph.DgraphClient) -> bool:
-    logger = logging.getLogger("pathways")
-    transaction = client.txn()
-    ## Check if data exists already
-    query = """
-query get_pathway_io_molecules ($pathway : string = "Glycolysis")
-{
-interactionList(func: type(Pathway)) @filter(eq(name, $pathway)) {
-    uid
-    name
-    interaction {
-    name
-    input {
-        uid
-        name
-    }
-    output {
-        uid
-        name
-    }
-    }
-}
-}
-"""
-    result = transaction.query(query)
-    
-    data = json.loads(result.json)
-    logger.debug("data: %r", json.dumps(data))
-    has_seed_data = len(data.get("interactionList", [])) != 0
-    transaction.discard()
-    return has_seed_data
