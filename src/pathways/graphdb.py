@@ -2,10 +2,22 @@ import logging
 import pydgraph
 
 from pathways.models import base, category, interaction, molecule, pathway, protein
+from pathways.settings import Settings
 
-def get_graphdb_client():
-    client = pydgraph.open('dgraph://graphdb:9080')  # TODO: use config env
+
+def prepare_seed_database():
+    settings = Settings()
+    client = get_graphdb_client()
+    init_models(client)
+    seed_junk_data(client)
+
+
+def get_graphdb_client() -> pydgraph.DgraphClient:
+    settings = Settings()
+    connection_string = settings.get_graphdb_url()
+    client = pydgraph.open(connection_string)
     return client
+
 
 def init_models(client: pydgraph.DgraphClient):
     base.initialize_schema(client)
@@ -15,7 +27,29 @@ def init_models(client: pydgraph.DgraphClient):
     pathway.initialize_schema(client)
     protein.initialize_schema(client)
 
+
 def seed_junk_data(client: pydgraph.DgraphClient):
+    """
+    Query to test output: 
+        query get_interactions_for_pathway ($pathway : string = "Glycolysis")
+        {
+        interactionList(func: type(Pathway)) @filter(eq(name, $pathway)) {
+            uid
+            name
+            interaction {
+                    name
+                    input {
+                        uid
+                        name
+                    }
+                    output {
+                        uid
+                        name
+                    }
+                }
+            }
+        }
+    """
     transaction = client.txn()
     try:
         insert_data = {
@@ -75,7 +109,7 @@ def seed_junk_data(client: pydgraph.DgraphClient):
         print(
             'Created pathway named "Glycolysis" with uid = {}'.format(response.uids["glycolysis"])
         )
-    except Exception as e:
+    except Exception:
         logging.exception("dafuq")
     finally:
         # Clean up. Calling this after txn.commit() is a no-op and hence safe.
